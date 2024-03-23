@@ -1,0 +1,75 @@
+// Function to upload video
+
+const dummyMetadata = {
+  title: "Your Video Title",
+  description: "Your Video Description",
+  tags: ["tag1", "tag2"],
+  categoryId: "22", // Example category
+  privacyStatus: "private", // 'private', 'public', or 'unlisted'
+};
+
+export const fetchVideoFromUrl = async (url) => {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch video: ${response.statusText}`);
+  }
+  return response.blob(); // Convert the response to a blob
+};
+
+export async function uploadVideo(
+  accessToken,
+  videoFile,
+  metadata = dummyMetadata
+) {
+  const url =
+    "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status";
+
+  // Create the metadata for the video
+  const body = JSON.stringify({
+    snippet: {
+      title: metadata.title,
+      description: metadata.description,
+      tags: metadata.tags,
+      categoryId: metadata.categoryId, // Example: "22" for People & Blogs
+    },
+    status: {
+      privacyStatus: metadata.privacyStatus, // 'private', 'public', or 'unlisted'
+    },
+  });
+
+  // Initial request to get the location URL for the video upload
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+      "X-Upload-Content-Length": videoFile.size,
+      "X-Upload-Content-Type": videoFile.type,
+    },
+    body: body,
+  });
+
+  if (response.ok) {
+    const locationUrl = response.headers.get("Location");
+
+    // Upload the video file to the location URL
+    const uploadResponse = await fetch(locationUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": videoFile.type,
+        "Content-Length": videoFile.size,
+      },
+      body: videoFile,
+    });
+
+    if (uploadResponse.ok) {
+      console.log("Video uploaded successfully");
+      const uploadResult = await uploadResponse.json();
+      console.log(uploadResult);
+    } else {
+      console.error("Video upload failed", uploadResponse.statusText);
+    }
+  } else {
+    console.error("Failed to initiate upload", response.statusText);
+  }
+}
