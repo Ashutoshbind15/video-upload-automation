@@ -1,5 +1,11 @@
+import { connectDB } from "@/lib/db";
+import Account from "@/models/Account";
+import User from "@/models/User";
+import { getServerSession } from "next-auth";
+import Credentials from "next-auth/providers/credentials";
 import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
+import bcrypt from "bcryptjs";
 
 export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET,
@@ -7,6 +13,31 @@ export const authOptions = {
     jwt: true,
   },
   providers: [
+    Credentials({
+      async authorize(credentials) {
+        await connectDB();
+
+        const { email, password } = credentials;
+        const user = await User.findOne({ email: email });
+        if (!user) return null;
+
+        const plaintextPassword = password;
+        const userSalt = user.salt;
+
+        const hashedPassword = await bcrypt.hash(
+          plaintextPassword,
+          userSalt ?? ""
+        );
+
+        const isAuth = hashedPassword === user.password;
+
+        if (!isAuth) return null;
+
+        return {
+          id: user._id,
+        };
+      },
+    }),
     GitHubProvider({
       clientId: process.env.GITHUB_ID ?? "",
       clientSecret: process.env.GITHUB_SECRET ?? "",
@@ -24,38 +55,87 @@ export const authOptions = {
   ],
   callbacks: {
     // Enhanced jwt callback
-    async jwt({ token, user, account, profile, isNewUser }) {
-      // Conditionally add account details to token
+    jwt: async ({ token, user, account }) => {
+      // console.log("jtoken", token, "juser", user);
 
-      if (account?.provider) {
-        console.log(account);
-        token.accessToken = account.access_token;
-        token.provider = account.provider;
+      if (account && account.provider !== "credentials") {
+        const appAccount = await Account.findOne({
+          provider: account.provider,
+          accountId: account.providerAccountId,
+        });
 
-        // Example: Attach user information if available
-        if (user) {
-          token.user = {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-          };
+        console.log(appAccount, "appAccount");
+
+        if (appAccount) {
+          token.user = { id: appAccount.userId };
         }
+      } else if (user) {
+        token.user = user;
       }
       return token;
     },
     // Enhanced session callback
-    async session({ session, token }) {
-      // Pass accessToken to the session
-      if (token) {
-        session.accessToken = token?.accessToken;
+    session: async ({ session, token }) => {
+      // console.log("stoken", token, "ssession", session);
+      session.user = token.user;
+      return session;
+    },
+    signIn: async (params) => {
+      const { account, user } = params;
+      const currSession = await getServerSession(authOptions);
 
-        // Example: Attach user information to session if available
-        if (token.user) {
-          session.user = token.user;
+      console.log("currSession", currSession);
+
+      // disallow to sign in with social accounts
+      if (!currSession && account.provider !== "credentials") {
+        return false;
+      }
+
+      // check if user is already signed in with credentials
+      if (currSession && account.provider === "credentials") {
+        return false;
+      }
+
+      if (currSession) {
+        console.log("signed in with credentials");
+        // means that user is already signed in with credentials
+
+        await connectDB();
+
+        if (account.provider !== "credentials") {
+          // user wants to link app account or to refresh token
+          // check if app account is already linked
+
+          const appAccount = await Account.findOne({
+            provider: account.provider,
+            userId: currSession.user.id,
+          });
+
+          if (appAccount) {
+            const newAccessToken = account.access_token;
+            const newRefreshToken = account.refresh_token;
+
+            appAccount.accessToken = newAccessToken;
+            appAccount.refreshToken = newRefreshToken;
+
+            await appAccount.save();
+          } else {
+            const acc = await Account.create({
+              provider: account.provider,
+              userId: currSession.user.id,
+              accessToken: account.access_token,
+              refreshToken: account.refresh_token,
+              accountId: account.providerAccountId,
+            });
+
+            await User.findByIdAndUpdate(currSession.user.id, {
+              $push: { accounts: acc._id },
+            });
+          }
         }
       }
 
-      return session;
+      return true;
     },
   },
 };
