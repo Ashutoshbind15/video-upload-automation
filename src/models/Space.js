@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+
 const SpaceSchema = new mongoose.Schema({
   title: String,
   description: String,
@@ -22,3 +24,5 @@ const SpaceSchema = new mongoose.Schema({
 });
 
 const Space = mongoose?.models?.Space || mongoose.model("Space", SpaceSchema);
+
+export default Space;

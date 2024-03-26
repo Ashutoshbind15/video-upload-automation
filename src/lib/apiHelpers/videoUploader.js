@@ -66,6 +66,7 @@ export async function uploadVideo(
       console.log("Video uploaded successfully");
       const uploadResult = await uploadResponse.json();
       console.log(uploadResult);
+      return uploadResult;
     } else {
       console.error("Video upload failed", uploadResponse.statusText);
     }

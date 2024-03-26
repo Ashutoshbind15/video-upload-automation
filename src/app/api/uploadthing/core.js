@@ -1,58 +1,55 @@
 import { getServerSession } from "next-auth";
 import { createUploadthing } from "uploadthing/next";
 import { authOptions } from "../auth/[...nextauth]/options";
-import Video from "@/app/models/Video";
-import User from "@/app/models/User";
+import { z } from "zod";
+import { connectDB } from "@/lib/db";
+import Video from "@/models/Video";
 
 const f = createUploadthing();
 
 // FileRouter for your app, can contain multiple FileRoutes
 export const ourFileRouter = {
-  // Define as many FileRoutes as you like, each with a unique routeSlug
-  imageUploader: f({ image: { maxFileSize: "4MB" } })
-    // Set permissions and file types for this FileRoute
-    .middleware(async ({ req }) => {
-      // This code runs on your server before upload
+  videoUploader: f({ video: { maxFileSize: "300MB" } })
+    .input(z.object({ vid: z.string() }))
+    .middleware(async ({ req, input }) => {
+      console.log("req", input);
+
       const sess = await getServerSession(authOptions);
-      console.log(sess);
-      const user = sess?.user;
 
-      // //   // If you throw, the user will not be able to upload
-      if (!sess || !user) throw new Error("Unauthorized");
+      const uid = sess?.user?.id;
 
-      // Whatever is returned here is accessible in onUploadComplete as `metadata`
-      return { userId: user?.id };
+      if (!sess || !uid) {
+        throw new Error("Unauthorized");
+      }
+
+      return { uid, vid: input.vid };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      // This code RUNS ON YOUR SERVER after upload
-      console.log("Upload complete for userId:", metadata.userId);
-
-      console.log("file url", file.url);
-    }),
-
-  videoUploader: f({ video: { maxFileSize: "16MB" } })
-    .middleware(async ({ req }) => {
-      const sess = await getServerSession(authOptions);
-      console.log(sess);
-      const user = sess?.user;
-
-      if (!sess || !user) throw new Error("Unauthorized");
-
-      return { userId: user?.id };
-    })
-    .onUploadComplete(async ({ metadata, file }) => {
-      console.log("Upload complete for userId:", metadata.userId);
-
+      console.log("Upload complete for userId:", metadata.uid);
+      console.log("Video id", metadata.vid);
       console.log("file url", file.url);
 
-      const dbUser = await User.findById(metadata.userId);
-      const fileUrl = file.url;
+      await connectDB();
 
-      const video = await Video.create({
-        fileUrl,
-      });
+      // Update the video with the cloudUrl
 
-      dbUser?.videos.push(video?._id);
-      await dbUser?.save();
+      const vid = await Video.findById(metadata.vid);
+
+      // check if user has made a request for the video before
+
+      const existingRequest = vid.requests.find(
+        (req) => req.uploader.toString() === metadata.uid
+      );
+
+      if (existingRequest) {
+        existingRequest.cloudUrl = file.url;
+      } else {
+        vid.requests.push({
+          uploader: metadata.uid,
+          cloudUrl: file.url,
+        });
+      }
+
+      await vid.save();
     }),
 };

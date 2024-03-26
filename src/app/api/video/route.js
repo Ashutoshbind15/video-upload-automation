@@ -1,8 +1,10 @@
 import { fetchVideoFromUrl, uploadVideo } from "@/lib/apiHelpers/videoUploader";
+import { connectDB } from "@/lib/db";
 import { NextResponse } from "next/server";
 
 export const POST = async (req) => {
   // dont implement like this
+  await connectDB();
   const jsonBody = await req.json();
 
   const { url, accessToken } = jsonBody;

@@ -2,8 +2,10 @@ import User from "@/models/User";
 import { NextResponse } from "next/server";
 
 import bcrypt from "bcryptjs";
+import { connectDB } from "@/lib/db";
 
 export const POST = async (req) => {
+  await connectDB();
   const jsonBody = await req.json();
   const { email, password, username } = jsonBody;
   const randomSalt = await bcrypt.genSalt(10);

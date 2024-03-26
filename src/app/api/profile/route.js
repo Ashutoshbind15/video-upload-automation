@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/options";
 import { NextResponse } from "next/server";
 import User from "@/models/User";
+import { connectDB } from "@/lib/db";
 
 export const GET = async (req) => {
   const sess = await getServerSession(authOptions);
@@ -9,6 +10,8 @@ export const GET = async (req) => {
   if (!sess) {
     return NextResponse.json({ msg: "No session found" }, { status: 401 });
   }
+
+  await connectDB();
 
   const uid = sess.user.id;
 

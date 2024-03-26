@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+
 const videoSchema = new mongoose.Schema({
   title: String,
   description: String,
@@ -18,7 +20,11 @@ const videoSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
       },
-      uploadProgress: {
+      cloudUploadProgress: {
+        type: Number,
+        default: 0, // 0 - 100%
+      },
+      providerUploadProgress: {
         type: Number,
         default: 0, // 0 - 100%
       },
@@ -28,3 +34,5 @@ const videoSchema = new mongoose.Schema({
 });
 
 const Video = mongoose?.models?.Video || mongoose.model("Video", videoSchema);
+
+export default Video;
