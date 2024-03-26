@@ -1,5 +1,6 @@
 "use client";
 
+import Navbar from "@/components/Layout/Navbar";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
@@ -11,7 +12,10 @@ const Layout = ({ session, children }) => {
     <div>
       <SessionProvider session={session}>
         <QueryClientProvider client={queryClient}>
-          {children}
+          <div>
+            <Navbar />
+            {children}
+          </div>
           <ReactQueryDevtools initialIsOpen={false} />
 
           <Toaster />

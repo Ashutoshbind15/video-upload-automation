@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useUser } from "@/lib/hooks/queries";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import React from "react";
 
 const Profile = () => {
@@ -40,6 +41,7 @@ const Profile = () => {
           <p>{user?._id}</p>
         </CardFooter>
       </Card>
+      <Button onClick={() => signOut()}>Sign Out</Button>
     </div>
   );
 };

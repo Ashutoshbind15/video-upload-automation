@@ -17,6 +17,10 @@ const UserSchema = mongoose.Schema({
       ref: "Space",
     },
   ],
+  stripeCustomerId: String,
+  stripeSubscriptionId: String,
+  stripePriceId: String,
+  stripeCurrentPeriodEnd: Date,
 });
 
 const User = mongoose?.models?.User || mongoose.model("User", UserSchema);
