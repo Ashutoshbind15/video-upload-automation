@@ -16,7 +16,7 @@ import Link from "next/link";
 
 const Navbar = () => {
   return (
-    <NavigationMenu className="">
+    <NavigationMenu className="z-30">
       <NavigationMenuList className="flex items-center justify-between px-8 w-screen py-3">
         <div className="flex items-center gap-x-4">
           <NavigationMenuItem>
@@ -30,9 +30,8 @@ const Navbar = () => {
           <NavigationMenuItem>
             <NavigationMenuTrigger>Space Links</NavigationMenuTrigger>
             <NavigationMenuContent className="flex items-center justify-between">
-              <div className="flex flex-col items-center w-80 gap-y-4 bg-slate-600 text-white py-6 px-8">
+              <div className="flex flex-col items-center w-80 gap-y-4 bg-slate-900 text-white py-6 px-8">
                 <div className="flex items-center justify-around">
-                  <Space className="w-6 h-6" />
                   <h1>Spaces</h1>
                 </div>
 

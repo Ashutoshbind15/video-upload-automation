@@ -1,5 +1,6 @@
 "use client";
 
+import Footer from "@/components/Layout/Footer";
 import Navbar from "@/components/Layout/Navbar";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -14,8 +15,10 @@ const Layout = ({ session, children }) => {
         <QueryClientProvider client={queryClient}>
           <div>
             <Navbar />
-            {children}
+            <main className="min-h-screen">{children}</main>
+            <Footer />
           </div>
+
           <ReactQueryDevtools initialIsOpen={false} />
 
           <Toaster />

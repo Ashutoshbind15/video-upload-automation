@@ -17,6 +17,18 @@ const Profile = () => {
   const { data, status } = useSession();
   const { userData, isUserError, isUserLoading, userError } = useUser();
 
+  const [subscriptionPlan, setSubscriptionPlan] = React.useState(null);
+
+  React.useEffect(() => {
+    fetch("/api/profile/plan")
+      .then((res) => res.json())
+      .then((data) => {
+        setSubscriptionPlan(data);
+      });
+  }, []);
+
+  console.log(subscriptionPlan);
+
   if (status === "loading") {
     return <div>Loading...</div>;
   }
@@ -28,21 +40,36 @@ const Profile = () => {
   const user = userData;
 
   return (
-    <div className="w-full">
+    <>
       <Card className="w-1/3">
         <CardHeader>
           <CardTitle>{user?.username}</CardTitle>
           <CardDescription>{user?.email}</CardDescription>
         </CardHeader>
         <CardContent>
-          <p>Card Content</p>
+          <div className="mb-6">
+            <p className="font-bold mb-4">Spaces</p>
+
+            {user?.spaces?.length
+              ? user?.spaces.map((space) => (
+                  <div key={space._id}>
+                    <p>{space.title}</p>
+                    <p>{space.description}</p>
+                  </div>
+                ))
+              : "You have not created any spaces yet."}
+          </div>
+          <div className="my-2 flex items-center gap-x-3">
+            <p className="text-base font-bold">Subscription: </p>
+            <Button>{subscriptionPlan?.name}</Button>
+          </div>
         </CardContent>
-        <CardFooter>
-          <p>{user?._id}</p>
+        <CardFooter className="flex  items-center gap-x-8">
+          <Button>Edit Profile</Button>
+          <Button onClick={() => signOut()}>Sign Out</Button>
         </CardFooter>
       </Card>
-      <Button onClick={() => signOut()}>Sign Out</Button>
-    </div>
+    </>
   );
 };
 

@@ -17,6 +17,7 @@ const Uploader = ({ endpoint = "videoUploader", vid }) => {
           alert(`ERROR! ${error.message}`);
         }}
         input={{ vid }}
+        className="ut-btn"
       />
     </>
   );

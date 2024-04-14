@@ -23,6 +23,14 @@ export const GET = async (req, { params }) => {
     {
       path: "videos",
       model: Video,
+      populate: {
+        path: "requests",
+        populate: {
+          path: "uploader",
+          model: "User",
+          select: "username email -_id",
+        },
+      },
     },
   ]);
   return NextResponse.json(space, { status: 200 });

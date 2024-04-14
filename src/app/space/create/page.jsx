@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import axios from "axios";
+import { PlusIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -75,7 +76,7 @@ const CreateSpacePage = () => {
 
         <Dialog>
           <DialogTrigger>Add Editors</DialogTrigger>
-          <DialogContent className="py-12">
+          <DialogContent className="py-12 max-h-screen overflow-y-auto">
             <Input
               type="text"
               placeholder="Search for editors"
@@ -84,41 +85,57 @@ const CreateSpacePage = () => {
               onChange={(e) => setEditorSearch(e.target.value)}
             />
 
-            {chosenEditors.map((editor) => (
-              <div key={editor._id}>
-                <p>{editor.username}</p>
-                <Button
-                  onClick={() =>
-                    setChosenEditors((prev) =>
-                      prev.filter((e) => e._id !== editor._id)
-                    )
-                  }
-                >
-                  Remove
-                </Button>
-              </div>
-            ))}
-
-            <div className="flex flex-col gap-y-2">
+            <div className="flex flex-col gap-x-4 items-center">
               {editors.map((editor) => {
                 if (
                   editor.username.toLowerCase().includes(editorSearch) ||
                   editor.email.toLowerCase().includes(editorSearch)
                 ) {
                   return (
-                    <div key={editor._id}>
-                      <p>{editor.username}</p>
+                    <div
+                      key={editor._id}
+                      className="w-full flex items-center justify-between px-6 my-3"
+                    >
+                      <div>
+                        <p>{editor.username}</p>
+                        <p>{editor.email}</p>
+                      </div>
                       <Button
                         onClick={() =>
                           setChosenEditors((prev) => [...prev, editor])
                         }
+                        disabled={chosenEditors.some(
+                          (e) => e._id === editor._id
+                        )}
                       >
-                        Add
+                        <PlusIcon className="text-white" />
                       </Button>
                     </div>
                   );
                 }
               })}
+            </div>
+
+            <div className="flex items-center w-full gap-x-6 px-6 flex-wrap">
+              {chosenEditors.map((editor) => (
+                <div key={editor._id} className="mb-3 relative">
+                  <div className="relative">
+                    <span className="flex items-center justify-center rounded-full bg-black text-white p-2 h-10 w-10">
+                      {editor.username.length > 0 ? editor.username[0] : ""}
+                    </span>
+                    <button
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs leading-none p-0 border-0 cursor-pointer hover:bg-red-700"
+                      onClick={() =>
+                        setChosenEditors((prev) =>
+                          prev.filter((e) => e._id !== editor._id)
+                        )
+                      }
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </DialogContent>
         </Dialog>

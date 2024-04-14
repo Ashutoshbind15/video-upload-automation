@@ -40,6 +40,7 @@ export const POST = async (req, { params }) => {
   const response = await uploadVideo(accessToken, videoFile);
 
   video.requests[requestIdx].approved = true;
+  video.requests[requestIdx].providerUploadProgress = 100;
   await video.save();
 
   console.log("response", response);

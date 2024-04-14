@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "../auth/[...nextauth]/options";
 import { connectDB } from "@/lib/db";
+import User from "@/models/User";
+import Video from "@/models/Video";
 
 export const POST = async (req) => {
   await connectDB();
@@ -35,7 +37,22 @@ export const POST = async (req) => {
 
 export const GET = async () => {
   await connectDB();
-  const spaces = await Space.find();
+  const spaces = await Space.find().populate([
+    {
+      path: "editors",
+      model: User,
+      select: "username",
+    },
+    {
+      path: "admins",
+      model: User,
+      select: "username",
+    },
+    {
+      path: "videos",
+      model: Video,
+    },
+  ]);
 
   return NextResponse.json(spaces, { status: 200 });
 };
