@@ -28,7 +28,7 @@ export function GridBackgroundDemo() {
               <div className="flex items-center gap-x-4 my-1">
                 <SidebarClose className="w-6 h-6 text-red-700" />
                 <li className="text-red-700">
-                  Upload them when you don't have enough connectivity
+                  Upload them when you don&apos;t have enough connectivity
                 </li>
               </div>
               <div className="flex items-center gap-x-4 my-1">
@@ -47,8 +47,8 @@ export function GridBackgroundDemo() {
           }
         >
           <ul className="mx-auto text-white text-center font-bold flex flex-col items-center gap-y-3">
-            You absolutely don't have to care about the hassle. So you can focus
-            on creating content.
+            You absolutely don&apos;t have to care about the hassle. So you can
+            focus on creating content.
           </ul>
         </MaskContainer>
       </div>

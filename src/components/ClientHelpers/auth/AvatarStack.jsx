@@ -1,3 +1,4 @@
+import Image from "next/image";
 import React from "react";
 
 const AvatarStack = ({ avatars }) => {
@@ -9,7 +10,7 @@ const AvatarStack = ({ avatars }) => {
   return (
     <div className="flex -space-x-4">
       {avatars.map((avatar, index) => (
-        <img
+        <Image
           key={index}
           className="w-10 h-10 rounded-full border-2 border-white bg-white"
           alt={avatar.alt}

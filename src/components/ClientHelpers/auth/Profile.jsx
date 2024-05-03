@@ -17,18 +17,6 @@ const Profile = () => {
   const { data, status } = useSession();
   const { userData, isUserError, isUserLoading, userError } = useUser();
 
-  const [subscriptionPlan, setSubscriptionPlan] = React.useState(null);
-
-  React.useEffect(() => {
-    fetch("/api/profile/plan")
-      .then((res) => res.json())
-      .then((data) => {
-        setSubscriptionPlan(data);
-      });
-  }, []);
-
-  console.log(subscriptionPlan);
-
   if (status === "loading") {
     return <div>Loading...</div>;
   }
@@ -58,10 +46,6 @@ const Profile = () => {
                   </div>
                 ))
               : "You have not created any spaces yet."}
-          </div>
-          <div className="my-2 flex items-center gap-x-3">
-            <p className="text-base font-bold">Subscription: </p>
-            <Button>{subscriptionPlan?.name}</Button>
           </div>
         </CardContent>
         <CardFooter className="flex  items-center gap-x-8">
