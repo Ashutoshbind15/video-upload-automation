@@ -56,15 +56,6 @@ const Navbar = () => {
               </div>
             </NavigationMenuContent>
           </NavigationMenuItem>
-
-          <NavigationMenuItem>
-            <NavigationMenuLink
-              className={navigationMenuTriggerStyle()}
-              href="/pricing"
-            >
-              Pricing
-            </NavigationMenuLink>
-          </NavigationMenuItem>
         </div>
 
         <div>

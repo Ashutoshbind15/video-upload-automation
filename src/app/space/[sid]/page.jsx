@@ -16,21 +16,34 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSpace } from "@/lib/hooks/queries";
 import axios from "axios";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
+
+const isAdmin = (space, session) => {
+  console.log(space.admins, session.user.id);
+  return space.admins.some((admin) => admin._id === session.user.id);
+};
+
+const isEditor = (space, session) => {
+  return space.editors.some((editor) => editor._id === session.user.id);
+};
 
 const SpacePage = ({ params }) => {
   const { sid } = params;
 
-  const { isSpaceError, isSpaceLoading, spaceData, spaceError } = useSpace(sid);
-
+  const { isSpaceError, isSpaceLoading, spaceData, spaceError, refetchSpace } =
+    useSpace(sid);
+  const [user, setUser] = useState(null);
   const [videoTitle, setVideoTitle] = useState("");
   const [videoDescription, setVideoDescription] = useState("");
-
   const admin = spaceData?.admins[0];
-
   const [dummyProgress, setDummyProgress] = useState(0);
+
+  const [isUploading, setIsUploading] = useState(false);
+
+  const { data: session, status } = useSession();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -39,6 +52,16 @@ const SpacePage = ({ params }) => {
 
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    fetch("/api/profile")
+      .then((res) => res.json())
+      .then((data) => setUser(data));
+  }, []);
+
+  if (isSpaceLoading) return <p>Loading...</p>;
+
+  if (isSpaceError) return <p>Error: {spaceError.message}</p>;
 
   return (
     <div>
@@ -106,12 +129,16 @@ const SpacePage = ({ params }) => {
                 <TabsTrigger value="requested" className="flex-1">
                   Requested
                 </TabsTrigger>
-                <TabsTrigger value="approved" className="flex-1">
-                  Approved
-                </TabsTrigger>
-                <TabsTrigger value="uploaded" className="flex-1">
-                  Uploaded
-                </TabsTrigger>
+                {isAdmin(spaceData, session) && (
+                  <>
+                    <TabsTrigger value="approved" className="flex-1">
+                      Approved
+                    </TabsTrigger>
+                    <TabsTrigger value="uploaded" className="flex-1">
+                      Uploaded
+                    </TabsTrigger>
+                  </>
+                )}
               </TabsList>
 
               <TabsContent value="requested" className="px-4 py-6">
@@ -134,110 +161,149 @@ const SpacePage = ({ params }) => {
                             </p>
                           </div>
 
-                          <div className="mt-3 mb-6">
-                            <h3 className="text-xl font-semibold mb-3">
-                              Requests
-                            </h3>
-                            <ul>
-                              {video.requests.map((req) => {
-                                if (!req.approved)
-                                  return (
-                                    <div
-                                      key={req._id}
-                                      className="flex items-center justify-between px-8 border-y-2 border-slate-100 py-3"
-                                    >
-                                      <div className="flex flex-col items-center">
-                                        <li>{req.uploader.username}</li>
-                                        <li>{req.uploader.email}</li>
-                                      </div>
+                          {isAdmin(spaceData, session) && (
+                            <div className="mt-3 mb-6">
+                              <h3 className="text-xl font-semibold mb-3">
+                                Requests
+                              </h3>
+                              <ul>
+                                {video.requests.map((req) => {
+                                  if (!req.approved)
+                                    return (
+                                      <div
+                                        key={req._id}
+                                        className="flex items-center justify-between px-8 border-y-2 border-slate-100 py-3"
+                                      >
+                                        <div className="flex flex-col items-center">
+                                          <li>{req.uploader.username}</li>
+                                          <li>{req.uploader.email}</li>
+                                        </div>
 
-                                      <div className="flex items-center gap-x-4">
-                                        <Dialog>
-                                          <DialogTrigger asChild>
-                                            <Button>Preview</Button>
-                                          </DialogTrigger>
-                                          <DialogContent className="p-16">
-                                            <div>{req.uploader.username}</div>
-                                            <div>{req.uploader.email}</div>
-                                            <div>{req.cloudUrl}</div>
-                                            <div>
-                                              {JSON.stringify(
-                                                req.metadata,
-                                                null,
-                                                2
-                                              )}
-                                            </div>
-                                          </DialogContent>
-                                        </Dialog>
-                                        <Button
-                                          onClick={() => {
-                                            signIn("google");
-                                          }}
-                                        >
-                                          SignIn
-                                        </Button>
-                                        <Button
-                                          onClick={async () => {
-                                            const { data } = await axios.post(
-                                              `/api/video/${video._id}/approve`,
-                                              {
-                                                requestId: req._id,
-                                              }
-                                            );
-                                            console.log(data);
-                                          }}
-                                        >
-                                          Approve
-                                        </Button>
+                                        {!isUploading ? (
+                                          <div className="flex items-center gap-x-4">
+                                            <Dialog>
+                                              <DialogTrigger asChild>
+                                                <Button>Preview</Button>
+                                              </DialogTrigger>
+                                              <DialogContent className="p-16">
+                                                <div>
+                                                  {req.uploader.username}
+                                                </div>
+                                                <div>{req.uploader.email}</div>
+                                                <div>{req.cloudUrl}</div>
+                                                <div>
+                                                  {JSON.stringify(
+                                                    req.metadata,
+                                                    null,
+                                                    2
+                                                  )}
+                                                </div>
+                                              </DialogContent>
+                                            </Dialog>
+                                            <Button
+                                              onClick={() => {
+                                                signIn("google");
+                                              }}
+                                            >
+                                              SignIn
+                                            </Button>
+                                            <Button
+                                              onClick={async () => {
+                                                setIsUploading(true);
+                                                const { data } =
+                                                  await axios.post(
+                                                    `/api/video/${video._id}/approve`,
+                                                    {
+                                                      requestId: req._id,
+                                                    }
+                                                  );
+                                                console.log(data);
+                                                toast("Video approved");
+                                                setIsUploading(false);
+                                                refetchSpace();
+                                              }}
+                                            >
+                                              Approve
+                                            </Button>
+                                          </div>
+                                        ) : (
+                                          <div>Uploading...</div>
+                                        )}
                                       </div>
-                                    </div>
-                                  );
-                              })}
-                            </ul>
-                          </div>
+                                    );
+                                })}
+                              </ul>
+                            </div>
+                          )}
 
-                          <Uploader vid={video._id} />
+                          {isEditor(spaceData, session) &&
+                          !video.requests.find(
+                            (req) => req.uploader._id === session.user.id
+                          ) ? (
+                            <Uploader vid={video._id} />
+                          ) : (
+                            video.requests.find(
+                              (req) => req.uploader._id === session.user.id
+                            ) && (
+                              <div className="flex items-center justify-between">
+                                <p>Waiting for approval</p>
+                                <Progress
+                                  value={
+                                    video.requests.find(
+                                      (req) =>
+                                        req.uploader._id === session.user.id
+                                    ).providerUploadProgress
+                                  }
+                                  className="w-1/3"
+                                />
+                                {/* reupload button */}
+                              </div>
+                            )
+                          )}
                         </div>
                       );
                   })}
                 </ul>
               </TabsContent>
-              <TabsContent value="approved">
-                <ul>
-                  {spaceData?.videos.map((video) => {
-                    const approved = video.requests.find(
-                      (req) => req.approved && req.providerUploadProgress < 100
-                    );
-
-                    if (approved)
-                      return (
-                        <div
-                          key={video?._id}
-                          className="flex items-center justify-between p-5"
-                        >
-                          <div>
-                            <p className="text-xl font-semibold">
-                              {approved.uploader.username}
-                            </p>
-                            <p className="text-lg font-light">
-                              {approved.uploader.email}
-                            </p>
-
-                            <a
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              href={approved.cloudUrl}
-                              className="underline"
-                            >
-                              Cloud Video Preview
-                            </a>
-                          </div>
-                          <Progress value={dummyProgress} className="w-1/3" />
-                        </div>
+              {isAdmin(spaceData, session) && (
+                <TabsContent value="approved">
+                  <ul>
+                    {spaceData?.videos.map((video) => {
+                      const approved = video.requests.find(
+                        (req) =>
+                          req.approved && req.providerUploadProgress < 100
                       );
-                  })}
-                </ul>
-              </TabsContent>
+
+                      if (approved)
+                        return (
+                          <div
+                            key={video?._id}
+                            className="flex items-center justify-between p-5"
+                          >
+                            <div>
+                              <p className="text-xl font-semibold">
+                                {approved.uploader.username}
+                              </p>
+                              <p className="text-lg font-light">
+                                {approved.uploader.email}
+                              </p>
+
+                              <a
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                href={approved.cloudUrl}
+                                className="underline"
+                              >
+                                Cloud Video Preview
+                              </a>
+                            </div>
+                            <Progress value={dummyProgress} className="w-1/3" />
+                          </div>
+                        );
+                    })}
+                  </ul>
+                </TabsContent>
+              )}
               <TabsContent value="uploaded">
                 <ul>
                   {spaceData?.videos.map((video) => {
@@ -299,41 +365,46 @@ const SpacePage = ({ params }) => {
           </div>
 
           <div className="my-3">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button>Add Video</Button>
-              </DialogTrigger>
-              <DialogContent className="p-16">
-                <form
-                  onSubmit={async (e) => {
-                    e.preventDefault();
-                    console.log("submit");
-                    console.log(videoTitle, videoDescription);
+            {isAdmin(spaceData, session) && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button>Add Video</Button>
+                </DialogTrigger>
+                <DialogContent className="p-16">
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      console.log("submit");
+                      console.log(videoTitle, videoDescription);
 
-                    await axios.put(`/api/space/${sid}`, {
-                      title: videoTitle,
-                      description: videoDescription,
-                    });
-                  }}
-                  className="gap-y-4 flex flex-col"
-                >
-                  <Input
-                    type="text"
-                    placeholder="Title"
-                    value={videoTitle}
-                    onChange={(e) => setVideoTitle(e.target.value)}
-                  />
-                  <Input
-                    type="text"
-                    placeholder="Description"
-                    value={videoDescription}
-                    onChange={(e) => setVideoDescription(e.target.value)}
-                  />
+                      await axios.put(`/api/space/${sid}`, {
+                        title: videoTitle,
+                        description: videoDescription,
+                      });
 
-                  <Button type="submit">Add Video</Button>
-                </form>
-              </DialogContent>
-            </Dialog>
+                      toast("Video request added");
+                      refetchSpace();
+                    }}
+                    className="gap-y-4 flex flex-col"
+                  >
+                    <Input
+                      type="text"
+                      placeholder="Title"
+                      value={videoTitle}
+                      onChange={(e) => setVideoTitle(e.target.value)}
+                    />
+                    <Input
+                      type="text"
+                      placeholder="Description"
+                      value={videoDescription}
+                      onChange={(e) => setVideoDescription(e.target.value)}
+                    />
+
+                    <Button type="submit">Add Video</Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
         </CardContent>
         <CardFooter>

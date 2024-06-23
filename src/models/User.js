@@ -17,6 +17,10 @@ const UserSchema = mongoose.Schema({
       ref: "Space",
     },
   ],
+  role: {
+    type: String,
+    default: "user",
+  },
 });
 
 const User = mongoose?.models?.User || mongoose.model("User", UserSchema);

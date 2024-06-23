@@ -15,7 +15,8 @@ export const POST = async (req) => {
   const uid = sess?.user?.id;
 
   if (!sess || !uid) {
-    return NextResponse.json({ msg: "Unauthorized" }, { status: 401 });
+    const loginUrl = new URL("/auth", req.url);
+    return NextResponse.redirect(loginUrl);
   }
 
   const { title, description, selectedUsers } = body;
@@ -35,9 +36,19 @@ export const POST = async (req) => {
   );
 };
 
-export const GET = async () => {
+export const GET = async (req) => {
+  const sess = await getServerSession(authOptions);
+  const uid = sess?.user?.id;
+
+  if (!sess || !uid) {
+    const loginUrl = new URL("/auth", req.url);
+    return NextResponse.redirect(loginUrl);
+  }
+
   await connectDB();
-  const spaces = await Space.find().populate([
+  const spaces = await Space.find({
+    $or: [{ admins: uid }, { editors: uid }],
+  }).populate([
     {
       path: "editors",
       model: User,

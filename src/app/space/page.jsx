@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useSpaces } from "@/lib/hooks/queries";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -24,6 +25,7 @@ const SpacePage = () => {
   }
 
   if (isSpacesError) {
+    console.log(spacesError);
     return <div>Error: {spacesError.message}</div>;
   }
 

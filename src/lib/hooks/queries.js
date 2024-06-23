@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { redirect, useRouter } from "next/navigation";
 
 export const useUser = () => {
   const { data, isError, isLoading, error } = useQuery({
@@ -19,13 +20,26 @@ export const useUser = () => {
 };
 
 export const useSpaces = () => {
+  const rtr = useRouter();
+
   const { data, isError, isLoading, error } = useQuery({
     queryKey: ["spaces"],
     queryFn: async () => {
       const res = await fetch("/api/space");
-      const json = await res.json();
-      return json;
+
+      if (res.redirected) {
+        return rtr.push(res.url);
+      }
+
+      if (res.status === 401) {
+        console.log("Unauthorized");
+        throw new Error("Unauthorized");
+      } else {
+        const json = await res.json();
+        return json;
+      }
     },
+    retry: false,
   });
 
   return {
@@ -37,7 +51,7 @@ export const useSpaces = () => {
 };
 
 export const useSpace = (sid) => {
-  const { data, isError, isLoading, error } = useQuery({
+  const { data, isError, isLoading, error, refetch } = useQuery({
     queryKey: ["space", sid],
     queryFn: async () => {
       const res = await fetch(`/api/space/${sid}`);
@@ -51,5 +65,6 @@ export const useSpace = (sid) => {
     isSpaceError: isError,
     isSpaceLoading: isLoading,
     spaceError: error,
+    refetchSpace: refetch,
   };
 };

@@ -3,21 +3,37 @@ import Space from "@/models/Space";
 import Video from "@/models/Video";
 import User from "@/models/User";
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../../auth/[...nextauth]/options";
 
 export const GET = async (req, { params }) => {
+  const sess = await getServerSession(authOptions);
+
+  if (!sess) {
+    return NextResponse.json({ msg: "Unauthorized" }, { status: 401 });
+  }
+
   await connectDB();
   console.log(params);
   const sid = params.sid;
 
+  const userSpaces = await Space.find({
+    $or: [{ admins: sess.user.id }, { editors: sess.user.id }],
+  });
+
+  if (!userSpaces.find((space) => space._id.toString() === sid)) {
+    return NextResponse.json({ msg: "Unauthorized" }, { status: 401 });
+  }
+
   const space = await Space.findById(sid).populate([
     {
       path: "editors",
-      select: "username email -_id",
+      select: "username email _id",
       model: User,
     },
     {
       path: "admins",
-      select: "username email -_id",
+      select: "username email _id",
       model: User,
     },
     {
@@ -28,7 +44,7 @@ export const GET = async (req, { params }) => {
         populate: {
           path: "uploader",
           model: "User",
-          select: "username email -_id",
+          select: "username email _id",
         },
       },
     },
@@ -38,6 +54,21 @@ export const GET = async (req, { params }) => {
 
 export const PUT = async (req, { params }) => {
   await connectDB();
+
+  const sess = await getServerSession(authOptions);
+
+  if (!sess) {
+    return NextResponse.json({ msg: "Unauthorized" }, { status: 401 });
+  }
+
+  const userSpaces = await Space.find({
+    $or: [{ admins: sess.user.id }, { editors: sess.user.id }],
+  });
+
+  if (!userSpaces.find((space) => space._id.toString() === params.sid)) {
+    return NextResponse.json({ msg: "Unauthorized" }, { status: 401 });
+  }
+
   const sid = params.sid;
   const body = await req.json();
 
