@@ -33,8 +33,6 @@ export const POST = async (req, { params }) => {
     { path: "lastModifiedAccount", model: Account },
   ]);
 
-  console.log("user", user);
-
   if (!user) {
     return NextResponse.json({ msg: "No user found" }, { status: 401 });
   }
@@ -47,8 +45,11 @@ export const POST = async (req, { params }) => {
   }
 
   const accessToken = user.lastModifiedAccount.accessToken;
-
   const videoFile = await fetchVideoFromUrl(cloudUrl);
+
+  console.log(accessToken, "accessToken");
+  console.log(videoFile, "videoFile");
+
   const response = await uploadVideo(accessToken, videoFile);
 
   if (!response) {
@@ -60,9 +61,14 @@ export const POST = async (req, { params }) => {
 
   video.requests[requestIdx].approved = true;
   video.requests[requestIdx].providerUploadProgress = 100;
+  video.requests[
+    requestIdx
+  ].providerUrl = `https://www.youtube.com/watch?v=${response.id}`;
+  console.log("response", response);
   await video.save();
 
-  console.log("response", response);
-
-  return NextResponse.json({ success: true }, { status: 200 });
+  return NextResponse.json(
+    { success: true, videoUploadId: response.id },
+    { status: 200 }
+  );
 };

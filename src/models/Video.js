@@ -16,6 +16,10 @@ const videoSchema = new mongoose.Schema({
       cloudUrl: {
         type: String,
       },
+      providerUrl: {
+        type: String,
+      },
+
       approved: {
         type: Boolean,
         default: false,

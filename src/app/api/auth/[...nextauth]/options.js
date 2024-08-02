@@ -59,10 +59,6 @@ export const authOptions = {
   callbacks: {
     // Enhanced jwt callback
     jwt: async ({ token, user, account }) => {
-      console.log("jtoken", token);
-      console.log("juser", user);
-      console.log("jaccount", account);
-
       if (account && account.provider !== "credentials") {
         const appAccount = await Account.findOne({
           provider: account.provider,
@@ -81,17 +77,12 @@ export const authOptions = {
     },
     // Enhanced session callback
     session: async ({ session, token }) => {
-      console.log("stoken", token);
       session.user = token.user;
       return session;
     },
     signIn: async (params) => {
       const { account, user } = params;
       const currSession = await getServerSession(authOptions);
-
-      console.log("csess", currSession);
-      console.log("cacc", account);
-      console.log("cuser", user);
 
       // disallow to sign in with social accounts
       if (!currSession && account.provider !== "credentials") {

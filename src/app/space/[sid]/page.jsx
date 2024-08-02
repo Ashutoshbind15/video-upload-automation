@@ -40,7 +40,7 @@ const SpacePage = ({ params }) => {
   const [user, setUser] = useState(null);
   const [videoTitle, setVideoTitle] = useState("");
   const [videoDescription, setVideoDescription] = useState("");
-  const admin = spaceData?.admins[0];
+
   const [dummyProgress, setDummyProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const { data: session, status } = useSession();
@@ -54,6 +54,20 @@ const SpacePage = ({ params }) => {
   if (isSpaceLoading) return <p>Loading...</p>;
 
   if (isSpaceError) return <p>Error: {spaceError.message}</p>;
+
+  if (spaceData?.msg === "Unauthorized") {
+    return (
+      <div className="p-20 flex flex-col gap-y-6">
+        <p>Unauthorized</p>
+
+        <Link href="/space" asChild>
+          <Button>Back to Spaces</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  const admin = spaceData?.admins[0];
 
   return (
     <div>
@@ -270,22 +284,16 @@ const SpacePage = ({ params }) => {
                           !video.requests.find(
                             (req) => req.uploader._id === session.user.id
                           ) ? (
-                            <Uploader vid={video._id} />
+                            <Uploader
+                              vid={video._id}
+                              refetchSpace={refetchSpace}
+                            />
                           ) : (
                             video.requests.find(
                               (req) => req.uploader._id === session.user.id
                             ) && (
                               <div className="flex items-center justify-between">
                                 <p>Waiting for approval</p>
-                                <Progress
-                                  value={
-                                    video.requests.find(
-                                      (req) =>
-                                        req.uploader._id === session.user.id
-                                    ).providerUploadProgress
-                                  }
-                                  className="w-1/3"
-                                />
                                 {/* reupload button */}
                               </div>
                             )
@@ -380,7 +388,7 @@ const SpacePage = ({ params }) => {
                             <a
                               target="_blank"
                               rel="noopener noreferrer"
-                              href={uploaded.cloudUrl}
+                              href={uploaded.providerUrl}
                               className="underline"
                             >
                               Provider Video Preview

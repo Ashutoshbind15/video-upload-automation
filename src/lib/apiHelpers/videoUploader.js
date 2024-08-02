@@ -38,6 +38,11 @@ export async function uploadVideo(
   });
 
   // Initial request to get the location URL for the video upload
+
+  console.log("accessToken", accessToken);
+  console.log("videoFile", videoFile);
+  console.log("body", body);
+
   const response = await fetch(url, {
     method: "POST",
     headers: {
@@ -48,6 +53,8 @@ export async function uploadVideo(
     },
     body: body,
   });
+
+  console.log("location req res", response);
 
   if (response.ok) {
     const locationUrl = response.headers.get("Location");
@@ -61,6 +68,8 @@ export async function uploadVideo(
       },
       body: videoFile,
     });
+
+    console.log("upload res", uploadResponse);
 
     if (uploadResponse.ok) {
       console.log("Video uploaded successfully");
