@@ -1,5 +1,6 @@
 "use client";
 
+import AlertBlocker from "@/components/Layout/AlertBlocker";
 import Uploader from "@/components/Video/Uploader";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +17,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSpace } from "@/lib/hooks/queries";
 import axios from "axios";
+import { CheckCircle } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -40,18 +42,8 @@ const SpacePage = ({ params }) => {
   const [videoDescription, setVideoDescription] = useState("");
   const admin = spaceData?.admins[0];
   const [dummyProgress, setDummyProgress] = useState(0);
-
   const [isUploading, setIsUploading] = useState(false);
-
   const { data: session, status } = useSession();
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setDummyProgress((prev) => (prev < 100 ? prev + 10 : 0));
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     fetch("/api/profile")
@@ -202,29 +194,67 @@ const SpacePage = ({ params }) => {
                                             </Dialog>
                                             <Button
                                               onClick={() => {
-                                                signIn("google");
+                                                signIn("google", {
+                                                  callbackUrl: `/space/${sid}`,
+                                                });
                                               }}
                                             >
                                               SignIn
                                             </Button>
-                                            <Button
-                                              onClick={async () => {
-                                                setIsUploading(true);
-                                                const { data } =
-                                                  await axios.post(
-                                                    `/api/video/${video._id}/approve`,
-                                                    {
-                                                      requestId: req._id,
-                                                    }
-                                                  );
-                                                console.log(data);
-                                                toast("Video approved");
-                                                setIsUploading(false);
-                                                refetchSpace();
-                                              }}
-                                            >
-                                              Approve
-                                            </Button>
+
+                                            {user?.lastModifiedAccount && (
+                                              <AlertBlocker
+                                                onSuccess={async () => {
+                                                  setIsUploading(true);
+                                                  const { data } =
+                                                    await axios.post(
+                                                      `/api/video/${video._id}/approve`,
+                                                      {
+                                                        requestId: req._id,
+                                                      }
+                                                    );
+                                                  console.log(data);
+
+                                                  setIsUploading(false);
+                                                  refetchSpace();
+                                                }}
+                                                confirmToastText={
+                                                  "Video approved"
+                                                }
+                                                warningText={`Approve ${req.uploader.username}'s video request?`}
+                                                warningTitle={"Approve Video"}
+                                                btnText={"Approve"}
+                                              >
+                                                {user?.accounts?.length
+                                                  ? user?.accounts?.map(
+                                                      (acc, idx) => (
+                                                        <div
+                                                          key={idx}
+                                                          className="my-2 py-2 border-y-2 border-gray-300 flex justify-between items-center"
+                                                        >
+                                                          <div>
+                                                            <p>
+                                                              {acc.provider}
+                                                            </p>
+                                                            <p>
+                                                              {acc.accountEmail}
+                                                            </p>
+                                                          </div>
+                                                          {user
+                                                            ?.lastModifiedAccount
+                                                            ?.accountEmail ===
+                                                            acc.accountEmail && (
+                                                            <div className="flex items-center gap-x-2">
+                                                              <p>Selected</p>
+                                                              <CheckCircle className="text-green-500" />
+                                                            </div>
+                                                          )}
+                                                        </div>
+                                                      )
+                                                    )
+                                                  : null}
+                                              </AlertBlocker>
+                                            )}
                                           </div>
                                         ) : (
                                           <div>Uploading...</div>

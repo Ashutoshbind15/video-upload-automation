@@ -49,6 +49,9 @@ export const authOptions = {
         params: {
           scope:
             "openid https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code",
         },
       },
     }),
@@ -56,7 +59,9 @@ export const authOptions = {
   callbacks: {
     // Enhanced jwt callback
     jwt: async ({ token, user, account }) => {
-      // console.log("jtoken", token, "juser", user);
+      console.log("jtoken", token);
+      console.log("juser", user);
+      console.log("jaccount", account);
 
       if (account && account.provider !== "credentials") {
         const appAccount = await Account.findOne({
@@ -76,7 +81,7 @@ export const authOptions = {
     },
     // Enhanced session callback
     session: async ({ session, token }) => {
-      // console.log("stoken", token, "ssession", session);
+      console.log("stoken", token);
       session.user = token.user;
       return session;
     },
@@ -84,7 +89,9 @@ export const authOptions = {
       const { account, user } = params;
       const currSession = await getServerSession(authOptions);
 
-      console.log("currSession", currSession);
+      console.log("csess", currSession);
+      console.log("cacc", account);
+      console.log("cuser", user);
 
       // disallow to sign in with social accounts
       if (!currSession && account.provider !== "credentials") {
@@ -109,6 +116,7 @@ export const authOptions = {
           const appAccount = await Account.findOne({
             provider: account.provider,
             userId: currSession.user.id,
+            accountId: account.providerAccountId,
           });
 
           if (appAccount) {
@@ -118,6 +126,13 @@ export const authOptions = {
             appAccount.accessToken = newAccessToken;
             appAccount.refreshToken = newRefreshToken;
 
+            appAccount.accountEmail = user.email;
+            appAccount.accountImage = user.image;
+
+            await User.findByIdAndUpdate(currSession.user.id, {
+              lastModifiedAccount: appAccount._id,
+            });
+
             await appAccount.save();
           } else {
             const acc = await Account.create({
@@ -126,11 +141,15 @@ export const authOptions = {
               accessToken: account.access_token,
               refreshToken: account.refresh_token,
               accountId: account.providerAccountId,
+              accountEmail: user.email,
+              accountImage: user.image,
             });
 
-            await User.findByIdAndUpdate(currSession.user.id, {
-              $push: { accounts: acc._id },
-            });
+            const dbUser = await User.findById(currSession.user.id);
+            dbUser.accounts.push(acc._id);
+            dbUser.lastModifiedAccount = acc._id;
+
+            await dbUser.save();
           }
         }
       }

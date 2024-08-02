@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import User from "@/models/User";
 import { connectDB } from "@/lib/db";
 import Space from "@/models/Space";
+import Account from "@/models/Account";
 
 export const GET = async (req) => {
   const sess = await getServerSession(authOptions);
@@ -22,6 +23,16 @@ export const GET = async (req) => {
       {
         path: "spaces",
         model: Space,
+      },
+      {
+        path: "accounts",
+        model: Account,
+        select: "-accessToken -refreshToken -accountId -userId -_id",
+      },
+      {
+        path: "lastModifiedAccount",
+        model: Account,
+        select: "-accessToken -refreshToken -accountId -userId -_id",
       },
     ]);
 

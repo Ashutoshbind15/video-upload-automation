@@ -30,14 +30,33 @@ export const POST = async (req, { params }) => {
   const uid = sess?.user?.id;
   const user = await User.findOne({ _id: uid }).populate([
     { path: "accounts", model: Account },
+    { path: "lastModifiedAccount", model: Account },
   ]);
 
   console.log("user", user);
 
-  const accessToken = user.accounts[0].accessToken;
+  if (!user) {
+    return NextResponse.json({ msg: "No user found" }, { status: 401 });
+  }
+
+  if (!user.lastModifiedAccount) {
+    return NextResponse.json(
+      { msg: "No account linked to user found" },
+      { status: 401 }
+    );
+  }
+
+  const accessToken = user.lastModifiedAccount.accessToken;
 
   const videoFile = await fetchVideoFromUrl(cloudUrl);
   const response = await uploadVideo(accessToken, videoFile);
+
+  if (!response) {
+    return NextResponse.json(
+      { msg: "Failed to upload video" },
+      { status: 500 }
+    );
+  }
 
   video.requests[requestIdx].approved = true;
   video.requests[requestIdx].providerUploadProgress = 100;
