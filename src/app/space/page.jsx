@@ -25,7 +25,6 @@ const SpacePage = () => {
   }
 
   if (isSpacesError) {
-    console.log(spacesError);
     return <div>Error: {spacesError.message}</div>;
   }
 
@@ -62,8 +61,6 @@ const SpacePage = () => {
               <div className="flex items-center justify-between gap-x-4 w-full">
                 <div className="flex -space-x-4">
                   {space?.editors?.map((editor, index) => {
-                    console.log(editor);
-
                     return (
                       <div
                         key={editor._id}
@@ -77,8 +74,6 @@ const SpacePage = () => {
                 </div>
                 <div className="flex -space-x-4">
                   {space?.admins?.map((admin, index) => {
-                    console.log(admin);
-
                     return (
                       <div
                         key={admin._id}

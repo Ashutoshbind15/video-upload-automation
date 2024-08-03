@@ -60,6 +60,11 @@ export const useSpace = (sid) => {
     },
   });
 
+  console.log(data);
+  console.log(isError);
+  console.log(isLoading);
+  console.log(error);
+
   return {
     spaceData: data,
     isSpaceError: isError,

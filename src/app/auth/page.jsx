@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import axios from "axios";
 import { signIn } from "next-auth/react";
+import Image from "next/image";
 import { useState } from "react";
 
 const AuthPage = () => {
@@ -13,16 +14,25 @@ const AuthPage = () => {
   const [singIn, setSignIn] = useState(true);
 
   return (
-    <div className="h-screen items-center justify-center flex flex-col">
+    <div
+      className={`h-screen items-center justify-center flex ${
+        singIn ? "flex-row" : "flex-row-reverse"
+      }`}
+    >
       {/* Sign in form */}
 
-      <div className="w-full">
+      <Image
+        src={"/images/lsauthpage.webp"}
+        width={500}
+        height={500}
+        alt="authimage"
+      />
+
+      <div className="w-1/2 flex flex-col">
         {singIn && (
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              console.log("sign in");
-              console.log(email, password);
 
               signIn("credentials", {
                 email,
@@ -51,6 +61,13 @@ const AuthPage = () => {
             <Button type="submit" className="my-2 w-1/2">
               Submit
             </Button>
+            <Button
+              onClick={() => setSignIn(!singIn)}
+              className="my-2 w-1/2"
+              type="button"
+            >
+              {singIn ? "Sign up" : "Sign in"}
+            </Button>
           </form>
         )}
 
@@ -58,7 +75,6 @@ const AuthPage = () => {
           <form
             onSubmit={async (e) => {
               e.preventDefault();
-              console.log("sign up");
 
               const { data } = await axios.post("/api/signup", {
                 email,
@@ -66,15 +82,11 @@ const AuthPage = () => {
                 username,
               });
 
-              console.log(data);
-
               signIn("credentials", {
                 email,
                 password,
                 callbackUrl: "/",
               });
-
-              console.log(email, password, username);
             }}
             className="flex flex-col gap-y-6 items-center"
           >
@@ -105,13 +117,16 @@ const AuthPage = () => {
             <Button type="submit" className="my-2 w-1/2">
               Submit
             </Button>
+            <Button
+              onClick={() => setSignIn(!singIn)}
+              className="my-2 w-1/2"
+              type="button"
+            >
+              {singIn ? "Sign up" : "Sign in"}
+            </Button>
           </form>
         )}
       </div>
-
-      <Button onClick={() => setSignIn(!singIn)} className="my-2 w-1/2">
-        {singIn ? "Sign up" : "Sign in"}
-      </Button>
     </div>
   );
 };

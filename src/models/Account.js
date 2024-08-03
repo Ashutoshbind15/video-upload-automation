@@ -5,6 +5,8 @@ const AccountSchema = new mongoose.Schema({
   accessToken: String,
   refreshToken: String,
   provider: String,
+  accountEmail: String,
+  accountImage: String,
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 });
 

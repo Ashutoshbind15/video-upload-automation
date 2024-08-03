@@ -30,20 +30,46 @@ export const POST = async (req, { params }) => {
   const uid = sess?.user?.id;
   const user = await User.findOne({ _id: uid }).populate([
     { path: "accounts", model: Account },
+    { path: "lastModifiedAccount", model: Account },
   ]);
 
-  console.log("user", user);
+  if (!user) {
+    return NextResponse.json({ msg: "No user found" }, { status: 401 });
+  }
 
-  const accessToken = user.accounts[0].accessToken;
+  if (!user.lastModifiedAccount) {
+    return NextResponse.json(
+      { msg: "No account linked to user found" },
+      { status: 401 }
+    );
+  }
 
+  const accessToken = user.lastModifiedAccount.accessToken;
   const videoFile = await fetchVideoFromUrl(cloudUrl);
-  const response = await uploadVideo(accessToken, videoFile);
 
-  video.requests[requestIdx].approved = true;
+  console.log(accessToken, "accessToken");
+  console.log(videoFile, "videoFile");
+
+  const response = await uploadVideo(accessToken, videoFile, video.metadata);
+
+  if (!response) {
+    return NextResponse.json(
+      { msg: "Failed to upload video" },
+      { status: 500 }
+    );
+  }
+
+  video.requests[requestIdx].approved = 2;
   video.requests[requestIdx].providerUploadProgress = 100;
+  video.requests[
+    requestIdx
+  ].providerUrl = `https://www.youtube.com/watch?v=${response.id}`;
+  console.log("response", response);
+  video.uploaded = true;
   await video.save();
 
-  console.log("response", response);
-
-  return NextResponse.json({ success: true }, { status: 200 });
+  return NextResponse.json(
+    { success: true, videoUploadId: response.id },
+    { status: 200 }
+  );
 };

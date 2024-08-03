@@ -1,16 +1,18 @@
 "use client";
 
 import { UploadButton } from "@uploadthing/react";
+import { toast } from "sonner";
 
-const Uploader = ({ endpoint = "videoUploader", vid }) => {
+const Uploader = ({ endpoint = "videoUploader", vid, refetchSpace }) => {
   return (
     <>
       <UploadButton
         endpoint={endpoint}
         onClientUploadComplete={(res) => {
           // Do something with the response
-          console.log("Files: ", res);
-          alert("Upload Completed");
+
+          toast("Upload complete!");
+          refetchSpace();
         }}
         onUploadError={(error) => {
           // Do something with the error.

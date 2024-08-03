@@ -21,6 +21,11 @@ const UserSchema = mongoose.Schema({
     type: String,
     default: "user",
   },
+
+  lastModifiedAccount: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Account",
+  },
 });
 
 const User = mongoose?.models?.User || mongoose.model("User", UserSchema);

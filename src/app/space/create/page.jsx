@@ -3,32 +3,28 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useDebounce } from "@/lib/hooks/utils";
 import axios from "axios";
 import { PlusIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 
 const CreateSpacePage = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-
   const [chosenEditors, setChosenEditors] = useState([]);
   const [editors, setEditors] = useState([]);
   const [editorSearch, setEditorSearch] = useState("");
-
   const rtr = useRouter();
-
-  console.log(editors);
+  const debouncedEditorSearchValue = useDebounce(editorSearch, 1000);
 
   useEffect(() => {
-    const fetchEditors = async () => {
-      const { data } = await axios.get("/api/users");
-      setEditors(data);
-    };
-
-    fetchEditors();
-  }, []);
+    fetch(`/api/users?q=${debouncedEditorSearchValue}`)
+      .then((res) => res.json())
+      .then((data) => setEditors(data))
+      .catch((error) => console.error(error));
+  }, [debouncedEditorSearchValue]);
 
   return (
     <div className="h-screen flex flex-col gap-y-10 items-center justify-center">
@@ -36,9 +32,6 @@ const CreateSpacePage = () => {
         onSubmit={async (e) => {
           e.preventDefault();
           try {
-            console.log(chosenEditors);
-            console.log(title, description);
-
             await axios.post("/api/space", {
               title,
               description,
@@ -85,34 +78,27 @@ const CreateSpacePage = () => {
               onChange={(e) => setEditorSearch(e.target.value)}
             />
 
-            <div className="flex flex-col gap-x-4 items-center">
+            <div className="flex flex-col gap-x-4 items-center max-h-40 overflow-y-auto">
               {editors.map((editor) => {
-                if (
-                  editor.username.toLowerCase().includes(editorSearch) ||
-                  editor.email.toLowerCase().includes(editorSearch)
-                ) {
-                  return (
-                    <div
-                      key={editor._id}
-                      className="w-full flex items-center justify-between px-6 my-3"
-                    >
-                      <div>
-                        <p>{editor.username}</p>
-                        <p>{editor.email}</p>
-                      </div>
-                      <Button
-                        onClick={() =>
-                          setChosenEditors((prev) => [...prev, editor])
-                        }
-                        disabled={chosenEditors.some(
-                          (e) => e._id === editor._id
-                        )}
-                      >
-                        <PlusIcon className="text-white" />
-                      </Button>
+                return (
+                  <div
+                    key={editor._id}
+                    className="w-full flex items-center justify-between px-6 my-3"
+                  >
+                    <div>
+                      <p>{editor.username}</p>
+                      <p>{editor.email}</p>
                     </div>
-                  );
-                }
+                    <Button
+                      onClick={() =>
+                        setChosenEditors((prev) => [...prev, editor])
+                      }
+                      disabled={chosenEditors.some((e) => e._id === editor._id)}
+                    >
+                      <PlusIcon className="text-white" />
+                    </Button>
+                  </div>
+                );
               })}
             </div>
 
@@ -139,6 +125,28 @@ const CreateSpacePage = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        <div className="flex items-center gap-x-6 px-6 flex-wrap w-1/2">
+          {chosenEditors.map((editor) => (
+            <div key={editor._id} className="mb-3 relative">
+              <div className="relative">
+                <span className="flex items-center justify-center rounded-full bg-black text-white p-2 h-10 w-10">
+                  {editor.username.length > 0 ? editor.username[0] : ""}
+                </span>
+                <button
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs leading-none p-0 border-0 cursor-pointer hover:bg-red-700"
+                  onClick={() =>
+                    setChosenEditors((prev) =>
+                      prev.filter((e) => e._id !== editor._id)
+                    )
+                  }
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
 
         <Button type="submit" className="my-2 w-1/2">
           Submit

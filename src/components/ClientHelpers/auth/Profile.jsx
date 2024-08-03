@@ -50,7 +50,15 @@ const Profile = () => {
         </CardContent>
         <CardFooter className="flex  items-center gap-x-8">
           <Button>Edit Profile</Button>
-          <Button onClick={() => signOut()}>Sign Out</Button>
+          <Button
+            onClick={() =>
+              signOut({
+                callbackUrl: "/",
+              })
+            }
+          >
+            Sign Out
+          </Button>
         </CardFooter>
       </Card>
     </>
