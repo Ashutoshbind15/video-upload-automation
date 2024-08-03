@@ -19,10 +19,9 @@ const videoSchema = new mongoose.Schema({
       providerUrl: {
         type: String,
       },
-
       approved: {
-        type: Boolean,
-        default: false,
+        type: Number,
+        default: 0,
       },
       cloudUploadProgress: {
         type: Number,
@@ -32,6 +31,19 @@ const videoSchema = new mongoose.Schema({
         type: Number,
         default: 0, // 0 - 100%
       },
+      chats: [
+        {
+          sender: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+          },
+          text: String,
+          createdAt: {
+            type: Date,
+            default: Date.now,
+          },
+        },
+      ],
       metadata: mongoose.Schema.Types.Mixed, // For Platform object metadata
     },
   ],

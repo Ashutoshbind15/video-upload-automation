@@ -32,9 +32,6 @@ const CreateSpacePage = () => {
         onSubmit={async (e) => {
           e.preventDefault();
           try {
-            console.log(chosenEditors);
-            console.log(title, description);
-
             await axios.post("/api/space", {
               title,
               description,

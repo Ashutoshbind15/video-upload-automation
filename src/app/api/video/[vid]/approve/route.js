@@ -59,7 +59,7 @@ export const POST = async (req, { params }) => {
     );
   }
 
-  video.requests[requestIdx].approved = true;
+  video.requests[requestIdx].approved = 2;
   video.requests[requestIdx].providerUploadProgress = 100;
   video.requests[
     requestIdx

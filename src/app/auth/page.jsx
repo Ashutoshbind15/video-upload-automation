@@ -33,8 +33,6 @@ const AuthPage = () => {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              console.log("sign in");
-              console.log(email, password);
 
               signIn("credentials", {
                 email,
@@ -77,7 +75,6 @@ const AuthPage = () => {
           <form
             onSubmit={async (e) => {
               e.preventDefault();
-              console.log("sign up");
 
               const { data } = await axios.post("/api/signup", {
                 email,
@@ -85,15 +82,11 @@ const AuthPage = () => {
                 username,
               });
 
-              console.log(data);
-
               signIn("credentials", {
                 email,
                 password,
                 callbackUrl: "/",
               });
-
-              console.log(email, password, username);
             }}
             className="flex flex-col gap-y-6 items-center"
           >
