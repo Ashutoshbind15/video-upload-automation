@@ -50,7 +50,7 @@ export const POST = async (req, { params }) => {
   console.log(accessToken, "accessToken");
   console.log(videoFile, "videoFile");
 
-  const response = await uploadVideo(accessToken, videoFile);
+  const response = await uploadVideo(accessToken, videoFile, video.metadata);
 
   if (!response) {
     return NextResponse.json(
@@ -65,6 +65,7 @@ export const POST = async (req, { params }) => {
     requestIdx
   ].providerUrl = `https://www.youtube.com/watch?v=${response.id}`;
   console.log("response", response);
+  video.uploaded = true;
   await video.save();
 
   return NextResponse.json(

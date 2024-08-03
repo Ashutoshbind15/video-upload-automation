@@ -45,8 +45,10 @@ const ReviewChat = ({ comments, reqId, vid }) => {
               {commentsData?.map((comment, idx) => (
                 <div
                   key={idx}
-                  className={`w-1/2 ${
-                    comment?.sender === cuser ? "self-end" : "self-start"
+                  className={`w-1/2 mb-2 rounded-md py-1 px-3 ${
+                    comment?.sender === cuser
+                      ? "self-start bg-slate-900 text-white"
+                      : "self-end bg-slate-300 text-black"
                   }`}
                 >
                   {comment?.text}

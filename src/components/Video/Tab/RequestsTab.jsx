@@ -55,6 +55,7 @@ const RequestsTab = ({
                   {video?.requests?.length ? (
                     <ul>
                       {video.requests.map((req) => {
+                        if (video.uploaded) return null;
                         if (req.approved === 0 || req.approved === 1)
                           return (
                             <div

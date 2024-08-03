@@ -124,11 +124,11 @@ const SpacePage = ({ params }) => {
                 <TabsTrigger value="requested" className="flex-1">
                   Requested
                 </TabsTrigger>
-                {isAdmin(spaceData, session) && (
+                {/* {isAdmin(spaceData, session) && (
                   <TabsTrigger value="approved" className="flex-1">
                     Approved
                   </TabsTrigger>
-                )}
+                )} */}
                 <TabsTrigger value="uploaded" className="flex-1">
                   Uploaded
                 </TabsTrigger>
@@ -145,11 +145,11 @@ const SpacePage = ({ params }) => {
                 />
               </TabsContent>
 
-              {isAdmin(spaceData, session) && (
+              {/* {isAdmin(spaceData, session) && (
                 <TabsContent value="approved">
                   <ApprovedTab spaceData={spaceData} />
                 </TabsContent>
-              )}
+              )} */}
 
               <TabsContent value="uploaded">
                 <UploadedTab spaceData={spaceData} />

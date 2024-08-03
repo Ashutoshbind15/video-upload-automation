@@ -44,9 +44,13 @@ const videoSchema = new mongoose.Schema({
           },
         },
       ],
-      metadata: mongoose.Schema.Types.Mixed, // For Platform object metadata
     },
   ],
+  metadata: {}, // For Platform object metadata
+  uploaded: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const Video = mongoose?.models?.Video || mongoose.model("Video", videoSchema);
